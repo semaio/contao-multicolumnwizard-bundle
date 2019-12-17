@@ -150,7 +150,7 @@ class MultiColumnWizard extends Widget
     protected $arrButtons = [
         'new'    => 'new.gif',
         'delete' => 'delete.gif',
-        'move'   => 'drag.gif'
+        'move'   => 'drag.gif',
     ];
 
     /**
@@ -232,7 +232,7 @@ class MultiColumnWizard extends Widget
                 if ($varValue === true) {
                     $this->arrButtons = array();
                 }
-                // No break here.
+            // No break here.
             case 'disableSorting':
                 if ($varValue == true) {
                     unset($this->arrButtons['up']);
@@ -245,8 +245,8 @@ class MultiColumnWizard extends Widget
                 if ($varValue === false) {
                     unset($this->arrButtons['move']);
                     unset($this->arrButtons['delete']);
-                    $this->arrButtons['up']     = 'up.gif';
-                    $this->arrButtons['down']   = 'down.gif';
+                    $this->arrButtons['up'] = 'up.gif';
+                    $this->arrButtons['down'] = 'down.gif';
                     $this->arrButtons['delete'] = 'delete.gif';
                 }
                 break;
@@ -480,7 +480,7 @@ class MultiColumnWizard extends Widget
         $dataContainer = 'DC_' . $GLOBALS['TL_DCA'][$this->strTable]['config']['dataContainer'];
 
         if ($dataContainer == \DC_General::class) {
-            $dcgXRequestTemp                  = $_SERVER['HTTP_X_REQUESTED_WITH'];
+            $dcgXRequestTemp = $_SERVER['HTTP_X_REQUESTED_WITH'];
             $_SERVER['HTTP_X_REQUESTED_WITH'] = null;
         }
 
@@ -508,17 +508,17 @@ class MultiColumnWizard extends Widget
     protected function validator($varInput)
     {
         // Cast all to an array. This should prevent us for some errors. See #35
-        $varInput = (array) $varInput;
+        $varInput = (array)$varInput;
 
         // The order of the data are in the right order. So just catch it and save it.
         $sortOrder = [];
-        $sortId    = 0;
+        $sortId = 0;
         foreach (\array_keys($varInput) as $id) {
             $sortOrder[$sortId] = $id;
             $sortId++;
         }
 
-        $blnHasError   = false;
+        $blnHasError = false;
         $varInputCount = count($varInput);
         for ($i = 0; $i < $varInputCount; $i++) {
             $this->activeRow = $i;
@@ -551,7 +551,7 @@ class MultiColumnWizard extends Widget
                     && ($rgxp == 'date' || $rgxp == 'time' || $rgxp == 'datim')
                     && $varValue != ''
                 ) {
-                    $objDate  = new Date($varValue, $this->getNumericDateFormat($rgxp));
+                    $objDate = new Date($varValue, $this->getNumericDateFormat($rgxp));
                     $varValue = $objDate->tstamp;
                 }
 
@@ -607,7 +607,7 @@ class MultiColumnWizard extends Widget
         $newWidgetError = [];
         foreach (\array_keys($this->arrWidgetErrors) as $field) {
             foreach ($this->arrWidgetErrors[$field] as $rowId => $fieldErrors) {
-                $sortId                          = $dataIdToSortId[$rowId];
+                $sortId = $dataIdToSortId[$rowId];
                 $newWidgetError[$field][$sortId] = $fieldErrors;
             }
         }
@@ -649,10 +649,10 @@ class MultiColumnWizard extends Widget
         }
 
         $this->strCommand = 'cmd_' . $this->strField;
-        $arrUnique        = array();
-        $arrDatepicker    = array();
-        $arrColorpicker   = array();
-        $arrTinyMCE       = array();
+        $arrUnique = array();
+        $arrDatepicker = array();
+        $arrColorpicker = array();
+        $arrTinyMCE = array();
 
         foreach ($this->columnFields as $strKey => $arrField) {
             // Store unique fields
@@ -678,7 +678,7 @@ class MultiColumnWizard extends Widget
                     $GLOBALS['TL_RTE']['tinyMCE'][$tinyId] = array(
                         'id'   => $tinyId,
                         'file' => 'tinyMCE',
-                        'type' => null
+                        'type' => null,
                     );
                 }
 
@@ -697,11 +697,11 @@ class MultiColumnWizard extends Widget
             $intNumberOfRows = $this->minCount;
         }
 
-        $arrItems        = array();
+        $arrItems = array();
         $arrHiddenHeader = array();
 
         if ($overwriteRowCurrentRow !== null) {
-            $i               = \intval($overwriteRowCurrentRow);
+            $i = \intval($overwriteRowCurrentRow);
             $intNumberOfRows = ($i + 1);
         } else {
             $i = 0;
@@ -710,11 +710,11 @@ class MultiColumnWizard extends Widget
         // Add input fields
         for (; $i < $intNumberOfRows; $i++) {
             $this->activeRow = $i;
-            $strHidden       = '';
+            $strHidden = '';
 
             // Walk every column
             foreach ($this->columnFields as $strKey => $arrField) {
-                $strWidget     = '';
+                $strWidget = '';
                 $blnHiddenBody = false;
 
                 if ($arrField['eval']['hideHead'] == true) {
@@ -770,7 +770,7 @@ class MultiColumnWizard extends Widget
 
                     // Tiny MCE.
                     if ($arrField['eval']['rte'] && strncmp($arrField['eval']['rte'], 'tiny', 4) === 0) {
-                        $additionalCode['tinyMce']     = $this->getMcWTinyMCEString(
+                        $additionalCode['tinyMce'] = $this->getMcWTinyMCEString(
                             $objWidget->id,
                             $arrField,
                             $this->strTable
@@ -789,11 +789,11 @@ class MultiColumnWizard extends Widget
                     if ($arrField['wizard']) {
                         $wizard = '';
 
-                        $dc               = $this->getDcDriver();
-                        $dc->field        = $strKey;
-                        $dc->inputName    = $objWidget->id;
+                        $dc = $this->getDcDriver();
+                        $dc->field = $strKey;
+                        $dc->inputName = $objWidget->id;
                         $dc->strInputName = $objWidget->id;
-                        $dc->value        = $objWidget->value;
+                        $dc->value = $objWidget->value;
 
                         if (is_array($arrField['wizard'])) {
                             foreach ($arrField['wizard'] as $callback) {
@@ -822,19 +822,29 @@ class MultiColumnWizard extends Widget
                     );
                 }
 
+                // Contao changed the name for FileTree and PageTree widgets
+                // @see https://github.com/menatwork/contao-multicolumnwizard-bundle/issues/51
+                $contaoVersion = VERSION . '.' . BUILD;
+                if ((version_compare($contaoVersion, '4.4.41', '>=') &&
+                        version_compare($contaoVersion, '4.5.0', '<')) ||
+                    version_compare($contaoVersion, '4.7.7', '>=')) {
+                    $strWidget = str_replace(['reloadFiletree', 'reloadFiletreeDMA'], 'reloadFiletree_mcw', $strWidget);
+                    $strWidget = str_replace(['reloadPagetree', 'reloadPagetreeDMA'], 'reloadPagetree_mcw', $strWidget);
+                }
+
                 // Build array of items
                 if ($arrField['eval']['columnPos'] != '') {
-                    $arrItems[$i][$objWidget->columnPos]['entry']   .= $strWidget;
-                    $arrItems[$i][$objWidget->columnPos]['valign']   = $arrField['eval']['valign'];
+                    $arrItems[$i][$objWidget->columnPos]['entry'] .= $strWidget;
+                    $arrItems[$i][$objWidget->columnPos]['valign'] = $arrField['eval']['valign'];
                     $arrItems[$i][$objWidget->columnPos]['tl_class'] = $arrField['eval']['tl_class'];
-                    $arrItems[$i][$objWidget->columnPos]['hide']     = $blnHiddenBody;
+                    $arrItems[$i][$objWidget->columnPos]['hide'] = $blnHiddenBody;
                 } else {
                     $arrItems[$i][$strKey] = array
                     (
                         'entry'    => $strWidget,
                         'valign'   => $arrField['eval']['valign'],
                         'tl_class' => $arrField['eval']['tl_class'],
-                        'hide'     => $blnHiddenBody
+                        'hide'     => $blnHiddenBody,
                     );
                 }
             }
@@ -897,7 +907,7 @@ class MultiColumnWizard extends Widget
      */
     protected function initializeWidget(&$arrField, $intRow, $strKey, $varValue)
     {
-        $xlabel          = '';
+        $xlabel = '';
         $strContaoPrefix = 'contao/';
 
         // YACE support for leo unglaub :)
@@ -951,7 +961,7 @@ class MultiColumnWizard extends Widget
                 $path = '?node=' . $arrField['eval']['path'];
             }
 
-            $xlabel              .= ' <a href="'
+            $xlabel .= ' <a href="'
                 . $strContaoPrefix . 'files.php' . $path
                 . '" title="' . StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['fileManager'])
                 . '" data-lightbox="files 765 80%">'
@@ -1066,7 +1076,7 @@ class MultiColumnWizard extends Widget
         }
 
         // Convert date formats into timestamps (check the eval setting first -> #3063)
-        $rgxp               = $arrField['eval']['rgxp'];
+        $rgxp = $arrField['eval']['rgxp'];
         $dateFormatErrorMsg = '';
         if (($rgxp == 'date' || $rgxp == 'time' || $rgxp == 'datim') && $varValue != '') {
             try {
@@ -1084,19 +1094,19 @@ class MultiColumnWizard extends Widget
         }
 
         // Setup the settings.
-        $arrField['activeRow']         = $intRow;
-        $arrField['name']              = $this->strName . '[' . $intRow . '][' . $strKey . ']';
-        $arrField['id']                = $this->strId . '_row' . $intRow . '_' . $strKey;
-        $arrField['value']             = (null !== $varValue) ? $varValue : $arrField['default'];
+        $arrField['activeRow'] = $intRow;
+        $arrField['name'] = $this->strName . '[' . $intRow . '][' . $strKey . ']';
+        $arrField['id'] = $this->strId . '_row' . $intRow . '_' . $strKey;
+        $arrField['value'] = ($varValue !== '') ? $varValue : $arrField['default'];
         $arrField['eval']['tableless'] = true;
 
         $arrData = $this->handleDcGeneral($arrField, $strKey);
 
         $objWidget = $this->buildWidget($strClass, $arrData, $arrField);
 
-        $objWidget->strId         = $arrField['id'];
-        $objWidget->storeValues   = true;
-        $objWidget->xlabel        = $xlabel;
+        $objWidget->strId = $arrField['id'];
+        $objWidget->storeValues = true;
+        $objWidget->xlabel = $xlabel;
         $objWidget->currentRecord = $this->currentRecord;
         if (!empty($dateFormatErrorMsg)) {
             $objWidget->addError($e->getMessage());
@@ -1145,15 +1155,15 @@ class MultiColumnWizard extends Widget
     private function buildWidgetForDcGeneral(array $arrData, array &$arrField)
     {
         $environment = $this->objDca->getEnvironment();
-        $properties  = $environment->getDataDefinition()->getPropertiesDefinition();
+        $properties = $environment->getDataDefinition()->getPropertiesDefinition();
 
         // Convert the property name for find the property in the definition.
-        $search       = array('/([\[][0-9]{1,}[\]])/', '/[\[\]]/');
-        $replace      = array('__', '');
+        $search = array('/([\[][0-9]{1,}[\]])/', '/[\[\]]/');
+        $replace = array('__', '');
         $propertyName = trim(preg_replace($search, $replace, $this->id), '__');
 
         $propertyClass = new \ReflectionClass($properties->getProperty($propertyName));
-        $property      = $propertyClass->newInstance($arrField['name']);
+        $property = $propertyClass->newInstance($arrField['name']);
         $properties->addProperty($property);
 
         $arrField['id'] = $arrField['name'];
@@ -1175,14 +1185,14 @@ class MultiColumnWizard extends Widget
         if (isset($arrField['reference'])) {
             $property->setExtra(
                 array_merge(
-                    (array) $property->getExtra(),
+                    (array)$property->getExtra(),
                     array('reference' => $arrField['reference'])
                 )
             );
         }
 
         $dataProvider = $environment->getDataProvider();
-        $model        = $dataProvider->getEmptyModel();
+        $model = $dataProvider->getEmptyModel();
         $model->setId(9999999);
         $model->setProperty($property->getName(), $arrField['value']);
 
@@ -1218,7 +1228,7 @@ class MultiColumnWizard extends Widget
             // If options-callback registered, call that one first as otherwise \Widget::getAttributesFromDca will kill
             // our options.
             if (is_array($arrData['options_callback'])) {
-                $arrCallback        = $arrData['options_callback'];
+                $arrCallback = $arrData['options_callback'];
                 $arrData['options'] = static::importStatic($arrCallback[0])->{$arrCallback[1]}($this);
                 unset($arrData['options_callback']);
             } elseif (is_callable($arrData['options_callback'])) {
@@ -1294,7 +1304,8 @@ class MultiColumnWizard extends Widget
         $arrItems,
         $arrHiddenHeader = array(),
         $onlyRows = false
-    ) {
+    )
+    {
 
         $return = '';
 
@@ -1308,21 +1319,21 @@ class MultiColumnWizard extends Widget
 
                     $strHeaderItem .= (key_exists($strKey, $arrHiddenHeader)) ? '<div class="invisible">' : '';
                     $strHeaderItem .=
-                    (
+                        (
                         (is_array($arrField['label']))
                             ? $arrField['label'][0]
                             : (
-                                ($arrField['label'] != null)
-                                    ? $arrField['label']
-                                    : $strKey
-                              )
-                    );
+                        ($arrField['label'] != null)
+                            ? $arrField['label']
+                            : $strKey
+                        )
+                        );
                     $strHeaderItem .=
-                    (
+                        (
                         (is_array($arrField['label']) && $arrField['label'][1] != '')
                             ? '<span title="' . $arrField['label'][1] . '"><sup>(?)</sup></span>'
                             : ''
-                    );
+                        );
                     $strHeaderItem .= (key_exists($strKey, $arrHiddenHeader)) ? '</div>' : '';
 
                     $arrHeaderItems[] = $strHeaderItem . '</th>';
@@ -1359,7 +1370,7 @@ class MultiColumnWizard extends Widget
             $return .= \sprintf('<tr data-rowId="%s">', $k);
             foreach ($arrValue as $itemValue) {
                 if ($itemValue['hide'] == true) {
-                    $itemValue['tl_class'] .= ' hidden';
+                    $itemValue['tl_class'] .= ' invisible';
                 }
 
                 $return .= '<td'
@@ -1382,7 +1393,7 @@ class MultiColumnWizard extends Widget
 
         if ($onlyRows == false) {
             $return .= '</tbody></table>';
-            $script  = <<<SCRIPT
+            $script = <<<SCRIPT
 <script>
 window.addEvent("domready", function() {
     window["MCW_" + %s] = new MultiColumnWizard({
@@ -1427,7 +1438,7 @@ SCRIPT;
      */
     protected function generateTemplateOutput($arrUnique, $arrDatepicker, $arrColorpicker, $strHidden, $arrItems)
     {
-        $objTemplate        = new BackendTemplate($this->columnTemplate);
+        $objTemplate = new BackendTemplate($this->columnTemplate);
         $objTemplate->items = $arrItems;
 
         $arrButtons = array();
@@ -1466,7 +1477,8 @@ SCRIPT;
         $strHidden,
         $arrItems,
         $arrHiddenHeader = array()
-    ) {
+    )
+    {
         // generate header fields
         foreach ($this->columnFields as $strKey => $arrField) {
             if (key_exists($strKey, $arrHiddenHeader)) {
@@ -1480,7 +1492,7 @@ SCRIPT;
             );
         }
 
-        $return  = '<div'
+        $return = '<div'
             . (($this->style) ? (' style="' . $this->style . '"') : '')
             . ' data-operations="maxCount['
             . ($this->maxCount ? $this->maxCount : '0')

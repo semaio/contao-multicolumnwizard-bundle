@@ -12,6 +12,7 @@
  *
  * @package    menatwork/contao-multicolumnwizard-bundle
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Julian Aziz Haslinger <me@aziz.wtf>
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @copyright  2011 Andreas Schempp
  * @copyright  2011 certo web & design GmbH
@@ -154,26 +155,45 @@ class ExecutePostActions extends BaseListener
             return;
         }
 
-        $intId    = \Input::get('id');
+        $intId = \Input::get('id');
         $strField = $container->inputName = \Input::post('name');
+        // Contao changed the name for FileTree and PageTree widgets
+        // @see https://github.com/menatwork/contao-multicolumnwizard-bundle/issues/51
+        $contaoVersion = VERSION . '.' . BUILD;
+        $vNameCheck = (version_compare($contaoVersion, '4.4.41', '>=') &&
+                version_compare($contaoVersion, '4.5.0', '<')) ||
+            version_compare($contaoVersion, '4.7.7', '>=');
 
-        // Get the field name parts.
-        $fieldParts = preg_split('/_row[0-9]*_/i', $strField);
-        preg_match('/_row[0-9]*_/i', $strField, $arrRow);
-        $intRow = substr(substr($arrRow[0], 4), 0, -1);
+        if ($vNameCheck) {
+            $fieldParts = preg_split('/[\[,]|[]\[,]+/', $strField);
+            $container->field = $strField;
+            $mcwBaseName = $fieldParts[0];
+            $intRow = $fieldParts[1];
+            $mcwSupFieldName = $fieldParts[2];
+        } else {
+            // Get the field name parts.
+            $fieldParts = preg_split('/_row[0-9]*_/i', $strField);
+            preg_match('/_row[0-9]*_/i', $strField, $arrRow);
+            $intRow = substr(substr($arrRow[0], 4), 0, -1);
 
-        // Rebuild field name.
-        $mcwFieldName    = $fieldParts[0] . '[' . $intRow . '][' . $fieldParts[1] . ']';
-        $mcwBaseName     = $fieldParts[0];
-        $mcwSupFieldName = $fieldParts[1];
+            // Rebuild field name.
+            $container->field = $fieldParts[0] . '[' . $intRow . '][' . $fieldParts[1] . ']';
+            $mcwBaseName = $fieldParts[0];
+            $mcwSupFieldName = $fieldParts[1];
+        }
+
+        $mcwId = $mcwBaseName . '_row' . $intRow . '_' . $mcwSupFieldName;
 
         // Handle the keys in "edit multiple" mode
         if (\Input::get('act') == 'editAll') {
-            $intId    = preg_replace('/.*_([0-9a-zA-Z]+)$/', '$1', $strField);
-            $strField = preg_replace('/(.*)_[0-9a-zA-Z]+$/', '$1', $strField);
+            if ($vNameCheck) {
+                $intId = preg_replace('/.*_([0-9a-zA-Z]+)$/', '$1', $mcwBaseName);
+                $mcwBaseName = preg_replace('/(.*)_[0-9a-zA-Z]+$/', '$1', $mcwBaseName);
+            } else {
+                $intId = preg_replace('/.*_([0-9a-zA-Z]+)$/', '$1', $strField);
+                $strField = preg_replace('/(.*)_[0-9a-zA-Z]+$/', '$1', $strField);
+            }
         }
-
-        $container->field = $mcwFieldName;
 
         // Add the sub configuration into the DCA. We need this for contao. Without it is not possible
         // to get the data for the picker.
@@ -195,7 +215,7 @@ class ExecutePostActions extends BaseListener
             throw new BadRequestHttpException('Bad request');
         }
 
-        $objRow   = null;
+        $objRow = null;
         $varValue = null;
 
         // Load the value
@@ -204,8 +224,8 @@ class ExecutePostActions extends BaseListener
                 $varValue = Config::get($strField);
             } elseif ($intId > 0 && Database::getInstance()->tableExists($container->table)) {
                 $objRow = Database::getInstance()
-                                  ->prepare('SELECT * FROM ' . $container->table . ' WHERE id=?')
-                                  ->execute($intId);
+                    ->prepare('SELECT * FROM ' . $container->table . ' WHERE id=?')
+                    ->execute($intId);
 
                 // The record does not exist
                 if ($objRow->numRows < 1) {
@@ -217,7 +237,7 @@ class ExecutePostActions extends BaseListener
                     throw new BadRequestHttpException('Bad request');
                 }
 
-                $varValue                = $objRow->$strField;
+                $varValue = $objRow->$strField;
                 $container->activeRecord = $objRow;
             }
         }
@@ -236,7 +256,7 @@ class ExecutePostActions extends BaseListener
 
         // Set the new value
         $varValue = Input::post('value', true);
-        $strKey   = (($action == 'reloadPagetree_mcw') ? 'pageTree' : 'fileTree');
+        $strKey = (($action == 'reloadPagetree_mcw') ? 'pageTree' : 'fileTree');
 
         // Convert the selected values
         if ($varValue != '') {
@@ -263,7 +283,7 @@ class ExecutePostActions extends BaseListener
         }
 
         /** @var FileTree|PageTree $strClass */
-        $strClass        = $GLOBALS['BE_FFL'][$strKey];
+        $strClass = $GLOBALS['BE_FFL'][$strKey];
         $fieldAttributes = $strClass::getAttributesFromDca(
             $GLOBALS['TL_DCA'][$container->table]['fields'][$strField],
             $container->inputName,
@@ -273,15 +293,21 @@ class ExecutePostActions extends BaseListener
             $container
         );
 
-        $fieldAttributes['id']       = \Input::post('name');
-        $fieldAttributes['name']     = $mcwFieldName;
-        $fieldAttributes['value']    = $varValue;
+        $fieldAttributes['id'] = $mcwId;
+        $fieldAttributes['name'] = $container->field;
+        $fieldAttributes['value'] = $varValue;
         $fieldAttributes['strTable'] = $container->table;
         $fieldAttributes['strField'] = $strField;
 
         /** @var FileTree|PageTree $objWidget */
         $objWidget = new $strClass($fieldAttributes);
+        $strWidget = $objWidget->generate();
 
-        throw new ResponseException($this->convertToResponse($objWidget->generate()));
+        if ($vNameCheck) {
+            $strWidget = str_replace(['reloadFiletree', 'reloadFiletreeDMA'], 'reloadFiletree_mcw', $strWidget);
+            $strWidget = str_replace(['reloadPagetree', 'reloadPagetreeDMA'], 'reloadPagetree_mcw', $strWidget);
+        }
+
+        throw new ResponseException($this->convertToResponse($strWidget));
     }
 }
